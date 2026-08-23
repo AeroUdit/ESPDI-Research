@@ -1,38 +1,32 @@
-# ESPDI — Enhanced Simplified Powered-Descent Initiation
+# ESPDI — Analytical Powered-Descent Initiation
 
 **Author:** Udit Karthik
 
-*An analytical powered-descent guidance framework for variable-mass rocket landing.*
-
-[Research Paper](paper/ESPDI_Final_Research_Paper.pdf) · [Simulation](simulation/espdi_simulation.py) · [Optimizer Validation](validation/validate_optimizer_t_v3.py)
+*An analytical powered-descent guidance framework for variable-mass rocket landing.*  
+**[ Research Paper · Simulation · Optimizer Validation ]**
 
 ---
 
 ## Overview
 
-Powered landing of a reusable rocket is a constrained guidance problem. The vehicle must convert an off-nominal position and velocity into a precise terminal state while respecting finite thrust and propellant.
+Powered landing of a reusable rocket is a constrained guidance problem. The vehicle must convert an off-nominal position and velocity into a precise terminal state while respecting finite thrust and propellant. 
 
-Numerical optimal-control methods can solve this problem, but they generally require iterative computation. **ESPDI** (Enhanced Simplified Powered-Descent Initiation) investigates whether the essential powered-descent ignition decision can instead be obtained analytically for a defined class of powered-descent problems.
+Numerical optimal-control methods can solve this problem, but they require iterative computation. **ESPDI** (Enhanced Simplified Powered-Descent Initiation) investigates whether the essential ignition decision can instead be obtained analytically for a defined class of powered-descent problems.
 
-The primary contribution is **ESPDI-T**, a three-dimensional analytical translational method for a drag-free, constant-gravity, variable-mass point-mass landing problem.
-
-ESPDI-T determines:
-
-* the required burn time,
-* the constant inertial thrust direction, and
-* the corresponding ignition point.
+The primary contribution is **ESPDI-T**, a three-dimensional analytical translational method that calculates:
+* The required burn time
+* The constant inertial thrust direction
+* The corresponding ignition point
 
 A secondary extension, **ESPDI-A**, introduces a terminal thrust-direction condition while retaining an analytical trajectory construction.
 
-> **Important scope:** The analytical results apply to the problem class defined in this repository: constant gravity, no aerodynamic drag, point-mass translational dynamics, variable mass, and the stated thrust constraints. This project does not claim to model a complete flight-qualified reusable launch vehicle.
-
-> **Benchmark note:** The numerical optimizer in this repository is an independent benchmark. It is not part of ESPDI.
+> **Note:** The numerical optimizer in this repository is an independent benchmark. It is not part of ESPDI.
 
 ---
 
 ## Research Question
 
-Can a variable-mass analytical powered-descent initiation method reproduce the minimum-propellant translational solution of numerical optimal control for the defined drag-free, constant-gravity problem class without performing trajectory optimization online?
+Can a variable-mass analytical powered-descent initiation method reproduce the minimum-propellant translational solution of numerical optimal control without performing trajectory optimization online?
 
 A secondary question is whether the same analytical framework can be extended to impose a terminal thrust-direction requirement while retaining low computational complexity.
 
@@ -40,577 +34,178 @@ A secondary question is whether the same analytical framework can be extended to
 
 ## ESPDI-T
 
-ESPDI-T solves the three-dimensional, drag-free, constant-gravity, variable-mass point-mass landing problem under maximum-thrust operation and a constant inertial thrust direction.
+ESPDI-T solves the drag-free, constant-gravity, variable-mass point-mass landing problem.
 
-The model uses:
+### 1. Variable-mass model
+For maximum thrust, the propellant mass-flow rate is:
+$$\dot{m}_p = \frac{T_{\max}}{I_{sp}g_0}$$
 
-* initial position $\mathbf{r}_0$,
-* initial velocity $\mathbf{v}_0$,
-* landing position $\mathbf{r}_L$,
-* gravitational acceleration $\mathbf{g}$,
-* initial mass $m_0$,
-* final burn mass $m_f$,
-* maximum thrust $T_{\max}$,
-* specific impulse $I_{sp}$, and
-* standard gravity $g_0$.
+and the vehicle mass during the burn is:
+$$m(t) = m_0 - \dot{m}_p t$$
 
-### 1. Variable-Mass Model
+The final mass must satisfy:
+$$m_f \geq m_{\mathrm{dry}}$$
 
-Define the positive propellant mass-flow rate as
+### 2. Required velocity change
+For zero terminal velocity, the required thrust-generated velocity change is:
+$$\mathbf{D}(t_b) = -\mathbf{v}_0 - \mathbf{g}t_b$$
+where $t_b$ is the burn time.
 
-$$
-\dot{m}*p = \frac{T*{\max}}{I_{sp}g_0}.
-$$
+### 3. Variable-mass delta-v
+The available thrust-generated delta-v is:
+$$\Delta v_T = I_{sp}g_0 \ln\left(\frac{m_0}{m_f}\right)$$
 
-The total vehicle mass decreases according to
+Therefore, ESPDI-T solves the scalar equation:
+$$I_{sp}g_0 \ln\left( \frac{m_0} {m_0-\dot{m}_p t_b} \right) = \left\Vert{} -\mathbf{v}_0-\mathbf{g}t_b \right\Vert{}$$
+*No trajectory-level optimization is performed.*
 
-$$
-\dot{m} = -\dot{m}_p.
-$$
+### 4. Constant thrust direction
+Once the burn time is known:
+$$\hat{\mathbf{u}}_{\mathrm{ESPDI}} = \frac{ -\mathbf{v}_0-\mathbf{g}t_b }{ \left\Vert{} -\mathbf{v}_0-\mathbf{g}t_b \right\Vert{} }$$
 
-Therefore,
+### 5. Ignition point
+Define the variable-mass position coefficient:
+$$K = I_{sp}g_0 \left[ \left( t_b-\frac{m_0}{\dot{m}_p} \right) \ln\left(\frac{m_0}{m_f}\right) + t_b \right]$$
 
-$$
-m(t) = m_0 - \dot{m}_p t.
-$$
-
-At the end of a burn of duration $t_b$,
-
-$$
-m_f = m_0 - \dot{m}_p t_b.
-$$
-
-The burn is feasible only if
-
-$$
-m_f \geq m_{\mathrm{dry}}.
-$$
-
-### 2. Required Velocity Change
-
-The terminal velocity requirement is
-
-$$
-\mathbf{v}(t_b)=\mathbf{0}.
-$$
-
-Gravity contributes
-
-$$
-\mathbf{g}t_b
-$$
-
-to the velocity over the burn.
-
-Therefore, the velocity change that must be generated by thrust is
-
-$$
-\mathbf{D}(t_b)
-===============
-
--\mathbf{v}_0-\mathbf{g}t_b.
-$$
-
-### 3. Variable-Mass Delta-v
-
-For constant maximum thrust and constant specific impulse, the available thrust-generated delta-v is
-
-$$
-\Delta v_T
-==========
-
-I_{sp}g_0
-\ln\left(
-\frac{m_0}{m_f}
-\right).
-$$
-
-ESPDI-T determines the burn time from the scalar equation
-
-$$
-I_{sp}g_0
-\ln\left(
-\frac{m_0}
-{m_0-\dot{m}_p t_b}
-\right)
-=======
-
-\left|
--\mathbf{v}_0-\mathbf{g}t_b
-\right|.
-$$
-
-The selected solution must also satisfy
-
-$$
-m_0-\dot{m}*p t_b
-\geq
-m*{\mathrm{dry}}.
-$$
-
-No trajectory-level numerical optimization is performed by ESPDI-T.
-
-### 4. Constant Inertial Thrust Direction
-
-Once the burn time has been found, the constant inertial thrust direction is
-
-$$
-\hat{\mathbf{u}}_{\mathrm{ESPDI}}
-=================================
-
-\frac{
--\mathbf{v}_0-\mathbf{g}t_b
-}{
-\left|
--\mathbf{v}_0-\mathbf{g}t_b
-\right|
-}.
-$$
-
-Thus, the thrust direction remains constant in the inertial frame throughout the burn.
-
-### 5. Ignition Point
-
-Define the variable-mass position coefficient
-
-$$
-K =
-I_{sp}g_0
-\left[
-\left(
-t_b-\frac{m_0}{\dot{m}_p}
-\right)
-\ln\left(
-\frac{m_0}{m_f}
-\right)
-+t_b
-\right].
-$$
-
-The ignition position is then
-
-$$
-\mathbf{r}_I
-============
-
-\mathbf{r}_L
--\mathbf{v}*0t_b
--K\hat{\mathbf{u}}*{\mathrm{ESPDI}}
--\frac{1}{2}\mathbf{g}t_b^2.
-$$
-
-ESPDI-T therefore determines the burn duration, thrust direction, and three-dimensional ignition point analytically.
+The ignition point is then:
+$$\mathbf{r}_I = \mathbf{r}_L - \mathbf{v}_0 t_b - K\hat{\mathbf{u}}_{\mathrm{ESPDI}} - \frac{1}{2}\mathbf{g}t_b^2$$
 
 ---
 
 ## ESPDI-A
 
-ESPDI-A extends the analytical framework by imposing a terminal thrust-direction condition.
+ESPDI-A extends the analytical framework by imposing a terminal thrust-direction condition. The acceleration profile is represented as:
+$$\mathbf{a}(\tau) = \mathbf{c}_0 + \mathbf{c}_1\tau + \mathbf{c}_2\tau^2, \qquad \tau=\frac{t}{t_f}$$
 
-Rather than assuming a constant inertial thrust direction, ESPDI-A constructs an analytical acceleration history that satisfies terminal position, terminal velocity, and terminal acceleration-direction requirements.
+with terminal position and velocity constraints:
+$$\mathbf{r}(t_f)=\mathbf{0}, \quad \mathbf{v}(t_f)=\mathbf{0}$$
 
-Define normalized time as
+Define:
+$$\Delta\mathbf{r} = -\mathbf{r}_0-\mathbf{v}_0 t_f$$
+$$\Delta\mathbf{v} = -\mathbf{v}_0$$
 
-$$
-\tau = \frac{t}{t_f},
-$$
+The analytical coefficients are:
+$$\mathbf{c}_0 = \frac{12\Delta\mathbf{r}}{t_f^2} - \frac{6\Delta\mathbf{v}}{t_f} + \mathbf{a}_f$$
+$$\mathbf{c}_1 = -\frac{48\Delta\mathbf{r}}{t_f^2} + \frac{30\Delta\mathbf{v}}{t_f} - 6\mathbf{a}_f$$
+$$\mathbf{c}_2 = \frac{36\Delta\mathbf{r}}{t_f^2} - \frac{24\Delta\mathbf{v}}{t_f} + 6\mathbf{a}_f$$
 
-where $t_f$ is the total maneuver duration.
+For an upright terminal thrust direction:
+$$\mathbf{a}_{T,f} = \mathbf{a}_f-\mathbf{g} = \frac{T_f}{m_f}\hat{\mathbf{b}}_{3,f}$$
 
-The acceleration profile is represented by
+The required thrust magnitude is:
+$$T_{\mathrm{req}}(t) = m(t) \left\Vert{} \mathbf{a}(t)-\mathbf{g} \right\Vert{}$$
 
-$$
-\mathbf{a}(\tau)
-================
+and the mass equation becomes:
+$$\dot{m} = -\frac{ m(t)\left\Vert{} \mathbf{a}(t)-\mathbf{g} \right\Vert{} }{ I_{sp}g_0 }$$
 
-\mathbf{c}_0
-+
-\mathbf{c}_1\tau
-+
-\mathbf{c}_2\tau^2.
-$$
-
-The terminal constraints are
-
-$$
-\mathbf{r}(t_f)=\mathbf{0},
-\qquad
-\mathbf{v}(t_f)=\mathbf{0}.
-$$
-
-Define
-
-$$
-\Delta\mathbf{r}
-================
-
--\mathbf{r}_0-\mathbf{v}_0t_f,
-$$
-
-and
-
-$$
-\Delta\mathbf{v}
-================
-
--\mathbf{v}_0.
-$$
-
-For a specified terminal acceleration vector $\mathbf{a}_f$, the analytical coefficients are
-
-$$
-\mathbf{c}_0
-============
-
-\frac{12\Delta\mathbf{r}}{t_f^2}
--\frac{6\Delta\mathbf{v}}{t_f}
-+\mathbf{a}_f,
-$$
-
-$$
-\mathbf{c}_1
-============
-
--\frac{48\Delta\mathbf{r}}{t_f^2}
-+\frac{30\Delta\mathbf{v}}{t_f}
--6\mathbf{a}_f,
-$$
-
-$$
-\mathbf{c}_2
-============
-
-\frac{36\Delta\mathbf{r}}{t_f^2}
--\frac{24\Delta\mathbf{v}}{t_f}
-+6\mathbf{a}_f.
-$$
-
-These coefficients satisfy the required terminal position and velocity constraints by construction.
-
-### Terminal Thrust-Direction Condition
-
-For an upright terminal thrust direction,
-
-$$
-\mathbf{a}_{T,f}
-================
-
-# \mathbf{a}_f-\mathbf{g}
-
-\frac{T_f}{m_f}\hat{\mathbf{b}}_{3,f}.
-$$
-
-More generally, the instantaneous thrust acceleration is
-
-$$
-\mathbf{a}_T(t)
-===============
-
-\mathbf{a}(t)-\mathbf{g}.
-$$
-
-When the required thrust is nonzero, its direction is
-
-$$
-\hat{\mathbf{u}}_T(t)
-=====================
-
-\frac{
-\mathbf{a}(t)-\mathbf{g}
-}{
-\left|
-\mathbf{a}(t)-\mathbf{g}
-\right|
-}.
-$$
-
-The required thrust magnitude is
-
-$$
-T_{\mathrm{req}}(t)
-===================
-
-m(t)
-\left|
-\mathbf{a}(t)-\mathbf{g}
-\right|.
-$$
-
-The variable-mass equation becomes
-
-$$
-\dot{m}
-=======
-
--\frac{
-m(t)
-\left|
-\mathbf{a}(t)-\mathbf{g}
-\right|
-}{
-I_{sp}g_0
-}.
-$$
-
-ESPDI-A determines the feasible final time using a scalar feasibility calculation based on the analytical acceleration profile and the available thrust and propellant, rather than using a vector-valued trajectory optimizer.
+ESPDI-A determines the feasible final time with a scalar feasibility calculation rather than a vector-valued trajectory optimizer.
 
 ---
 
 ## Numerical Optimal-Control Benchmark
 
-The numerical optimizer is an independent benchmark used to evaluate the analytical methods. It is not part of ESPDI.
+The optimizer is an independent benchmark, not part of ESPDI. It minimizes propellant:
+$$J = \frac{1}{I_{sp}g_0} \int_0^{t_f} \left\Vert{} \mathbf{T}(t) \right\Vert{}dt$$
 
-The optimizer minimizes propellant mass:
+subject to:
+$$\dot{\mathbf{r}}=\mathbf{v}$$
+$$\dot{\mathbf{v}} = \frac{\mathbf{T}}{m} + \mathbf{g}$$
+$$\dot{m} = -\frac{\Vert{}\mathbf{T}\Vert{}} {I_{sp}g_0}$$
 
-$$
-J
-=
+and the terminal constraints:
+$$\mathbf{r}(t_f)=\mathbf{0}, \quad \mathbf{v}(t_f)=\mathbf{0}$$
+$$\Vert{}\mathbf{T}(t)\Vert{} \leq T_{\max}$$
+$$m(t_f)\geq m_{\mathrm{dry}}$$
 
-\frac{1}{I_{sp}g_0}
-\int_0^{t_f}
-\left|
-\mathbf{T}(t)
-\right|
-,dt.
-$$
-
-The translational dynamics are
-
-$$
-\dot{\mathbf{r}}
-================
-
-\mathbf{v},
-$$
-
-$$
-\dot{\mathbf{v}}
-================
-
-\frac{\mathbf{T}}{m}
-+
-\mathbf{g},
-$$
-
-and
-
-$$
-\dot{m}
-=======
-
--\frac{
-\left|
-\mathbf{T}
-\right|
-}{
-I_{sp}g_0
-}.
-$$
-
-The terminal constraints are
-
-$$
-\mathbf{r}(t_f)
-===============
-
-\mathbf{0},
-$$
-
-$$
-\mathbf{v}(t_f)
-===============
-
-\mathbf{0}.
-$$
-
-The thrust constraint is
-
-$$
-\left|
-\mathbf{T}(t)
-\right|
-\leq
-T_{\max}.
-$$
-
-The final-mass constraint is
-
-$$
-m(t_f)
-\geq
-m_{\mathrm{dry}}.
-$$
-
-For the independent validation, the optimizer is tested using multiple initial guesses and multiple discretization meshes. This prevents the comparison from relying solely on an ESPDI-generated initial thrust history.
-
----
-
-## Monte Carlo Evaluation
-
-The final performance evaluation contains:
-
-* **500 Pair-T cases**
-* **500 Pair-A cases**
-
-For each case, the corresponding analytical method and numerical benchmark are evaluated from the same initial vehicle state.
-
-The evaluation records:
-
-* fuel consumption,
-* computation time,
-* convergence status,
-* terminal position,
-* terminal velocity, and
-* landing status.
-
-The exact state-generation procedure and fixed random-seed configuration are contained in the accompanying simulation and validation code.
-
----
-
-## Final Monte Carlo Results
-
-### ESPDI-T vs. Optimizer-T
-
-| Metric                       |                 Result |
-| :--------------------------- | ---------------------: |
-| ESPDI-T successful cases     |                500/500 |
-| Optimizer-T successful cases |                500/500 |
-| Mean ESPDI-T fuel            |             874.040 kg |
-| Mean Optimizer-T fuel        |             874.040 kg |
-| Mean paired fuel gap         | $-5.28\times10^{-11}%$ |
-| Mean ESPDI-T runtime         |                0.558 s |
-| Mean Optimizer-T runtime     |               13.316 s |
-
-The translational fuel difference is at numerical roundoff scale.
-
-The mean computation-time ratio is
-
-$$
-\frac{13.316}{0.558}
-\approx 23.9.
-$$
-
-Therefore, in this implementation, ESPDI-T required approximately **23.9 times less mean computation time** than the numerical optimizer.
-
-The appropriate interpretation is that ESPDI-T reproduced the numerical benchmark solution to numerical precision across the tested Pair-T cases. This does **not** constitute a proof of global optimality for arbitrary rocket-landing problems.
-
-### ESPDI-A vs. Optimizer-A
-
-| Metric                      |        Result |
-| :-------------------------- | ------------: |
-| ESPDI-A analytical cases    |       500/500 |
-| Optimizer-A converged cases |       499/500 |
-| Mean ESPDI-A fuel           |   1175.485 kg |
-| Mean Optimizer-A fuel       |   1131.205 kg |
-| Mean fuel gap               |        3.894% |
-| Median fuel gap             |        3.652% |
-| Fuel-gap range              | 0.221%–7.614% |
-| Mean ESPDI-A runtime        |       4.003 s |
-| Mean Optimizer-A runtime    |      24.083 s |
-
-The single missing Optimizer-A result is retained as a **numerical benchmark nonconvergence** rather than being classified as a physical landing failure.
-
-ESPDI-A provides an analytical solution satisfying the imposed terminal-direction construction, but in the tested cases it is not as fuel-efficient as the numerical optimizer.
-
-This result is treated as an analytical-extension performance comparison rather than evidence that ESPDI-A is globally optimal.
-
----
-
-## Independent Optimizer-T Validation
-
-A separate validation program independently reproduces the Pair-T state-generation process using a fixed random seed.
-
-The validation addresses two questions.
-
-### 1. Same-Seed Control
-
-The optimizer is initialized using the ESPDI-T trajectory to verify that the numerical formulation can reproduce the known solution.
-
-### 2. Independent Rediscovery
-
-The optimizer is initialized from non-ESPDI thrust histories to test whether it can independently converge to the same solution.
-
-The final validation dataset contains:
-
-* 20 Pair-T states,
-* two tested discretization meshes: $N=8$ and $N=12$,
-* two independent non-ESPDI starts at each mesh, and
-* same-seed ESPDI control runs.
-
-Across the 20 validation states, the best independently initialized optimizer solutions differed from ESPDI-T by less than approximately
-
-$$
-10^{-6}%
-$$
-
-in fuel at the tested meshes.
-
-This supports the conclusion that the benchmark agreement is not simply caused by supplying ESPDI-T as the optimizer's initial trajectory.
+The optimizer is tested from multiple initial guesses and multiple discretization meshes so that the comparison is not based only on an ESPDI-provided initial trajectory.
 
 ---
 
 ## Final Simulation
 
-The simulator provides a three-panel three-dimensional visualization.
+The simulator uses a three-panel 3D visualization. Each method has its own physical trajectory and telemetry:
 
-| Method        | Role                                    |
-| :------------ | :-------------------------------------- |
-| **ESPDI-T**   | Analytical translational solution       |
-| **Optimizer** | Independent numerical benchmark         |
-| **ESPDI-A**   | Analytical terminal-direction extension |
+| Method | Role |
+|---|---|
+| **ESPDI-T** | Analytical translation |
+| **Optimizer** | Independent benchmark |
+| **ESPDI-A** | Analytical extension |
 
-The visualization includes:
-
-* 3D trajectory,
-* moving rocket,
-* landing pad at $(0,0,0)$,
-* trajectory trail,
-* ignition point,
-* position,
-* velocity,
-* terminal velocity,
-* thrust magnitude,
-* guidance angle,
-* fuel used, and
-* landing status.
-
-Each method is evaluated using its own computed trajectory and telemetry.
+**The visualization includes:**
+* 3D trajectory
+* Moving rocket
+* Landing pad at (0, 0, 0)
+* Trajectory trail
+* Ignition point
+* Position and velocity
+* Terminal velocity
+* Thrust magnitude
+* Guidance angle
+* Fuel used
+* Landing status
 
 ---
 
 ## Vehicle Model
 
-| Parameter        |                       Value |
-| :--------------- | --------------------------: |
-| Initial mass     |                   12,000 kg |
-| Dry mass         |                    4,500 kg |
-| Maximum thrust   |                      180 kN |
-| Specific impulse |                       320 s |
-| Initial T/W      |                      1.5291 |
-| Gravity          |                   9.81 m/s² |
-| Drag             |                    Excluded |
-| Vehicle model    | 3D variable-mass point mass |
+| Parameter | Value |
+| :--- | :--- |
+| Initial mass | 12,000 kg |
+| Dry mass | 4,500 kg |
+| Maximum thrust | 180 kN |
+| Specific impulse | 320 s |
+| Initial T/W | 1.5291 |
+| Gravity | 9.81 m/s² |
+| Drag | Excluded |
+| Model | 3D variable-mass point mass |
 
-The baseline model intentionally excludes aerodynamic drag and full rotational dynamics so that the primary analytical translational problem remains tractable.
-
-Consequently, the results should not be interpreted as a complete simulation of a flight-qualified reusable launch vehicle.
+*The baseline model intentionally excludes aerodynamic drag and full rotational dynamics so that the primary analytical translational problem remains tractable.*
 
 ---
 
-## Assumptions and Limitations
+## Final Monte Carlo Results
 
-ESPDI in this repository is evaluated under the following assumptions:
+The final performance dataset contains **500 Pair-T cases** and **500 Pair-A cases**.
 
-1. Gravity is constant.
-2. Aerodynamic drag is neglected.
-3. The vehicle is modeled as a point mass for the translational analysis.
-4. Propellant mass decreases according to the specified thrust and specific impulse.
-5. ESPDI-T uses maximum thrust during the burn.
-6. ESPDI-T assumes a constant inertial thrust direction.
-7. Full attitude dynamics are outside the present translational model.
-8. Engine-gimbal dynamics, structural flexibility, atmospheric effects, and actuator delays are not modeled.
+### ESPDI-T vs Optimizer-T
+* **ESPDI-T success:** 500/500
+* **Optimizer-T success:** 500/500
+* **Mean ESPDI-T fuel:** 874.040 kg
+* **Mean Optimizer-T fuel:** 874.040 kg
+* **Mean paired fuel gap:** -5.28 × 10⁻¹¹ %
+* **Mean ESPDI-T runtime:** 0.558 s
+* **Mean Optimizer-T runtime:** 13.316 s
 
-These assumptions define the analytical problem being investigated and delimit the scope of the numerical results.
+The translational fuel difference is at numerical roundoff scale. The mean computation-time ratio is approximately:
+$$\frac{13.316}{0.558} \approx 23.9$$
+ESPDI-T required about 23.9 times less mean computation time in this implementation.
+
+### ESPDI-A vs Optimizer-A
+* **ESPDI-A analytical cases:** 500/500
+* **Optimizer-A converged cases:** 499/500 *(The single missing Optimizer-A result is retained as a numerical benchmark nonconvergence rather than being treated as a physical failure.)*
+* **Mean ESPDI-A fuel:** 1175.485 kg
+* **Mean Optimizer-A fuel:** 1131.205 kg
+* **Mean fuel gap:** 3.894%
+* **Median fuel gap:** 3.652%
+* **Fuel-gap range:** 0.221%–7.614%
+* **Mean ESPDI-A runtime:** 4.003 s
+* **Mean Optimizer-A runtime:** 24.083 s
+
+---
+
+## Independent Optimizer-T Validation
+
+A separate validation program reproduces the Pair-T state-generation process using a fixed random seed. The validation checks two things:
+1. **Same-seed control:** the optimizer can reproduce the known ESPDI-T solution when initialized with the ESPDI trajectory.
+2. **Independent rediscovery:** the optimizer can reach essentially the same solution from non-ESPDI initial thrust histories.
+
+**The final validation dataset contains:**
+* 20 Pair-T states
+* 2 tested meshes: $N = 8$ and $N = 12$
+* 2 independent non-ESPDI starts at each mesh
+* same-seed ESPDI control runs
+
+The best independent optimizer solution across the 20 validation states differed from ESPDI-T by less than approximately $10^{-6}\%$ in fuel at the tested meshes. This supports the conclusion that the optimizer benchmark is not simply reproducing ESPDI because ESPDI was supplied as its initial trajectory.
 
 ---
 
@@ -621,7 +216,7 @@ ESPDI/
 ├── README.md
 │
 ├── simulation/
-│   └── espdi_simulation.py
+│   └── espdi_simulation_repaired.py
 │
 ├── validation/
 │   └── validate_optimizer_t_v3.py
@@ -639,40 +234,3 @@ ESPDI/
 │
 └── paper/
     └── ESPDI_Final_Research_Paper.pdf
-```
-
----
-
-## Reproducibility
-
-The repository contains the code, numerical datasets, figures, and research paper used for the final results.
-
-The CSV files provide the numerical performance data used to generate the reported statistics and figures.
-
-The validation program provides the independent optimizer tests used to assess whether the numerical benchmark can rediscover the ESPDI-T solution from non-ESPDI initial trajectories.
-
----
-
-## Research Paper
-
-The complete mathematical derivations, methodology, numerical experiments, validation procedure, and discussion of results are provided in the accompanying research paper.
-
-**[Read the ESPDI Research Paper](paper/ESPDI_Final_Research_Paper.pdf)**
-
----
-
-## References
-
-The complete bibliographic references and source material used in the development of the mathematical framework are provided in the research paper.
-
----
-
-## Summary of Findings
-
-For the defined drag-free, constant-gravity, variable-mass translational problem, ESPDI-T reproduced the numerical benchmark fuel solution to numerical precision across the final 500-case Pair-T evaluation while requiring substantially less computation time in the tested implementation.
-
-ESPDI-A demonstrates that the analytical framework can also be extended to include a terminal thrust-direction condition. In the evaluated cases, however, ESPDI-A used more propellant than the numerical optimizer, making it an analytical extension rather than the minimum-propellant solution.
-
-The results support the following central finding:
-
-> **For the specified translational problem class, the powered-descent initiation decision can be obtained analytically without online trajectory optimization while retaining agreement with the independently validated numerical benchmark.**
