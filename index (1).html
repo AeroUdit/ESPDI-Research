@@ -1,1 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="ESPDI — Analytical Powered-Descent Initiation for Variable-Mass Rocket Landing by Udit Karthik.">
+  <title>ESPDI | Udit Karthik</title>
+  <link rel="stylesheet" href="style.css">
 
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['\\(', '\\)']],
+        displayMath: [['\\[', '\\]']]
+      },
+      svg: { fontCache: 'global' }
+    };
+  </script>
+  <script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+</head>
+
+<body>
+<header class="site-header">
+  <div class="container nav-wrap">
+    <a class="brand" href="#top">ESPDI</a>
+    <nav>
+      <a href="#research">Research</a>
+      <a href="#math">Mathematics</a>
+      <a href="#results">Results</a>
+      <a href="#validation">Validation</a>
+      <a href="#paper">Paper</a>
+      <a href="https://github.com/AeroUdit/ESPDI-Research" id="githubLink" target="_blank" rel="noopener">GitHub</a>
+    </nav>
+  </div>
+</header>
+
+<main id="top">
+  <section class="hero">
+    <div class="container hero-grid">
+      <div>
+        <p class="eyebrow">ANALYTICAL GUIDANCE · ROCKET LANDING · RESEARCH</p>
+        <h1>Analytical Powered-Descent Initiation</h1>
+        <p class="subtitle">ESPDI — a low-computation analytical framework for variable-mass powered landing.</p>
+        <p class="author">Udit Karthik</p>
+        <div class="actions">
+          <a class="button primary" href="paper/ESPDI_Final_Research_Paper.pdf">Read the Research Paper</a>
+          <a class="button secondary" href="simulation/espdi_simulation_repaired.py">View Simulation Code</a>
+        </div>
+      </div>
+
+      <div class="hero-card">
+        <div class="metric">
+          <span class="metric-label">Primary method</span>
+          <strong>ESPDI-T</strong>
+          <span>Analytical translational guidance</span>
+        </div>
+        <div class="metric">
+          <span class="metric-label">Benchmark</span>
+          <strong>Optimal Control</strong>
+          <span>Independent numerical formulation</span>
+        </div>
+        <div class="metric">
+          <span class="metric-label">Final study</span>
+          <strong>500 + 500</strong>
+          <span>Pair-T + Pair-A cases</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="research" class="section">
+    <div class="container">
+      <div class="section-heading">
+        <p class="eyebrow">THE RESEARCH PROBLEM</p>
+        <h2>Can an analytical law match numerical optimal control?</h2>
+      </div>
+      <div class="two-col">
+        <div>
+          <p>Powered landing is a constrained guidance problem: a rocket must convert an off-nominal position and velocity into a precise terminal state while respecting finite thrust and propellant.</p>
+          <p>ESPDI asks a narrower question: for a defined drag-free, constant-gravity, variable-mass landing model, can the ignition decision be calculated analytically rather than through an online trajectory optimizer?</p>
+        </div>
+        <div class="callout">
+          <strong>Core idea</strong>
+          <div class="flow">
+            <span>Current state</span><i>→</i>
+            <span>Burn time</span><i>→</i>
+            <span>Thrust direction</span><i>→</i>
+            <span>Ignition point</span><i>→</i>
+            <span>Landing</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="math" class="section alt">
+    <div class="container">
+      <div class="section-heading">
+        <p class="eyebrow">MATHEMATICAL FRAMEWORK</p>
+        <h2>ESPDI-T</h2>
+      </div>
+
+      <div class="math-grid">
+        <article class="math-card">
+          <span class="step">01</span>
+          <h3>Variable mass</h3>
+          <p>The maximum-thrust burn produces a constant propellant mass-flow rate.</p>
+          \[
+            \dot m_p = \frac{T_{\max}}{I_{sp}g_0},
+            \qquad
+            m(t)=m_0-\dot m_p t
+          \]
+        </article>
+
+        <article class="math-card">
+          <span class="step">02</span>
+          <h3>Burn time</h3>
+          <p>The terminal zero-velocity condition gives a scalar nonlinear equation for burn duration.</p>
+          \[
+            I_{sp}g_0
+            \ln\left(
+              \frac{m_0}{m_0-\dot m_p t_b}
+            \right)
+            =
+            \left\|
+              -\mathbf v_0-\mathbf g t_b
+            \right\|
+          \]
+        </article>
+
+        <article class="math-card">
+          <span class="step">03</span>
+          <h3>Thrust direction</h3>
+          <p>The required velocity-change vector directly determines the constant inertial direction.</p>
+          \[
+            \hat{\mathbf u}
+            =
+            \frac{-\mathbf v_0-\mathbf g t_b}
+            {\left\|-\mathbf v_0-\mathbf g t_b\right\|}
+          \]
+        </article>
+
+        <article class="math-card">
+          <span class="step">04</span>
+          <h3>Ignition point</h3>
+          <p>The closed-form variable-mass position integral gives the recoverable ignition boundary.</p>
+          \[
+            \mathbf r_I
+            =
+            \mathbf r_L
+            -
+            \mathbf v_0 t_b
+            -
+            K\hat{\mathbf u}
+            -
+            \frac12\mathbf g t_b^2
+          \]
+        </article>
+      </div>
+
+      <div class="formula-wide">
+        <p class="small-label">Key interpretation</p>
+        <p>ESPDI-T does not search through a large control history. The primary calculation reduces to a scalar root solve followed by closed-form vector and position calculations.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="section-heading">
+        <p class="eyebrow">ANALYTICAL EXTENSION</p>
+        <h2>ESPDI-A</h2>
+      </div>
+      <div class="two-col">
+        <div>
+          <p>ESPDI-A adds a terminal thrust-direction requirement while retaining an analytical trajectory family. The acceleration profile is represented by a quadratic in normalized time:</p>
+          <div class="equation-large">
+            \[
+              \mathbf a(\tau)
+              =
+              \mathbf c_0+\mathbf c_1\tau+\mathbf c_2\tau^2,
+              \qquad
+              \tau=\frac{t}{t_f}
+            \]
+          </div>
+        </div>
+        <div class="callout neutral">
+          <strong>Research boundary</strong>
+          <p>ESPDI-A is not a full 6DOF attitude controller. It is an analytical terminal-thrust-direction extension. Its fuel gap relative to the independent optimizer quantifies the cost of retaining that deterministic structure.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="results" class="section alt">
+    <div class="container">
+      <div class="section-heading">
+        <p class="eyebrow">FINAL EXPERIMENT</p>
+        <h2>500-case Monte Carlo comparison</h2>
+      </div>
+
+      <div class="result-grid">
+        <div class="result-card">
+          <span>ESPDI-T success</span>
+          <strong>500 / 500</strong>
+          <small>100% successful cases</small>
+        </div>
+        <div class="result-card">
+          <span>T fuel gap</span>
+          <strong>~0%</strong>
+          <small>Numerical roundoff scale</small>
+        </div>
+        <div class="result-card">
+          <span>T runtime advantage</span>
+          <strong>23.9×</strong>
+          <small>Mean per-case runtime</small>
+        </div>
+        <div class="result-card">
+          <span>ESPDI-A fuel gap</span>
+          <strong>3.894%</strong>
+          <small>499 converged paired cases</small>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <h3>ESPDI-T fuel gap</h3>
+        <img src="figures/ESPDI_T_Fuel_Gap.png" alt="ESPDI-T fuel gap across 500 Monte Carlo cases">
+      </div>
+
+      <div class="chart-card">
+        <h3>ESPDI-A fuel gap</h3>
+        <img src="figures/ESPDI_A_Fuel_Gap.png" alt="ESPDI-A fuel gap across paired cases">
+      </div>
+
+      <div class="chart-card">
+        <h3>Mean computation time</h3>
+        <img src="figures/Computation_Time_Comparison.png" alt="Mean computation time comparison">
+      </div>
+    </div>
+  </section>
+
+  <section id="validation" class="section">
+    <div class="container">
+      <div class="section-heading">
+        <p class="eyebrow">INDEPENDENT VALIDATION</p>
+        <h2>Testing that the optimizer is genuinely independent</h2>
+      </div>
+
+      <div class="two-col">
+        <div>
+          <p>The validation uses the same Pair-T state-generation process and fixed seed as the main simulation. It then tests the numerical optimizer in two ways:</p>
+          <ol>
+            <li><strong>Same-seed control:</strong> initialize the optimizer with ESPDI-T.</li>
+            <li><strong>Independent rediscovery:</strong> initialize the optimizer from non-ESPDI thrust histories.</li>
+          </ol>
+          <p>Mesh variation was also tested at <strong>N = 8</strong> and <strong>N = 12</strong>.</p>
+        </div>
+        <div class="callout">
+          <strong>20-state validation</strong>
+          <p>The best independent solutions stayed within sub-micropercent fuel difference of ESPDI-T across the tested states and meshes.</p>
+        </div>
+      </div>
+
+      <div class="chart-card">
+        <h3>Independent optimizer rediscovery</h3>
+        <img src="figures/Optimizer_T_Validation.png" alt="Independent Optimizer-T validation">
+      </div>
+    </div>
+  </section>
+
+  <section class="section alt">
+    <div class="container">
+      <div class="section-heading">
+        <p class="eyebrow">SIMULATION</p>
+        <h2>Run the actual 3D simulation</h2>
+        <p>The repository contains the complete Python simulation. Run it locally to see the live 3D trajectories, moving rocket, ignition point, landing-pad marker, telemetry, and method-specific behavior.</p>
+      </div>
+
+      <div class="callout simulation-callout">
+        <strong>Simulation source</strong>
+        <p>The animation is generated by the code itself rather than embedded as a static three-panel graphic on this website.</p>
+        <div class="actions">
+          <a class="button primary" href="simulation/espdi_simulation_repaired.py">Open Simulation Code</a>
+          <a class="button secondary" href="results/espdi_monte_carlo_results.csv">View Monte Carlo Data</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="paper" class="section">
+    <div class="container paper-banner">
+      <div>
+        <p class="eyebrow">FULL DOCUMENTATION</p>
+        <h2>Read the full research paper</h2>
+        <p>The paper contains the complete derivations, assumptions, optimal-control benchmark formulation, experimental methodology, Monte Carlo results, limitations, and conclusions.</p>
+      </div>
+      <a class="button primary" href="paper/ESPDI_Final_Research_Paper.pdf">Open PDF</a>
+    </div>
+  </section>
+
+  <section class="section compact">
+    <div class="container">
+      <div class="resource-grid">
+        <a class="resource" href="simulation/espdi_simulation_repaired.py">
+          <span>Simulation</span><strong>Python source</strong>
+        </a>
+        <a class="resource" href="validation/validate_optimizer_t_v3.py">
+          <span>Validation</span><strong>Independent benchmark</strong>
+        </a>
+        <a class="resource" href="results/optimizer_t_validation_v3_results.csv">
+          <span>Raw data</span><strong>Optimizer validation</strong>
+        </a>
+        <a class="resource" href="figures/ESPDI_Architecture.png">
+          <span>Figure</span><strong>ESPDI architecture</strong>
+        </a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="container footer-wrap">
+    <div><strong>ESPDI</strong><span> · Udit Karthik</span></div>
+    <div>Analytical powered-descent initiation · 2026</div>
+  </div>
+</footer>
+
+</body>
+</html>
