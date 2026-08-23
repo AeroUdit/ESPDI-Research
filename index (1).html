@@ -1,1 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="ESPDI — Analytical Powered-Descent Initiation for Variable-Mass Rocket Landing by Udit Karthik.">
+  <title>ESPDI | Udit Karthik</title>
+  <link rel="stylesheet" href="./style.css">
+  <script>
+    window.MathJax = {
+      tex: { inlineMath: [['\\(', '\\)']], displayMath: [['\\[', '\\]']] },
+      svg: { fontCache: 'global' }
+    };
+  </script>
+  <script async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+</head>
+<body>
+<header class="site-header">
+  <div class="container nav-wrap">
+    <a class="brand" href="#top">ESPDI</a>
+    <nav>
+      <a href="#research">Research</a>
+      <a href="#math">Mathematics</a>
+      <a href="#results">Results</a>
+      <a href="#validation">Validation</a>
+      <a href="#paper">Paper</a>
+    </nav>
+  </div>
+</header>
 
+<main id="top">
+  <section class="hero">
+    <div class="container hero-grid">
+      <div>
+        <p class="eyebrow">ANALYTICAL POWERED-DESCENT GUIDANCE</p>
+        <h1>ESPDI</h1>
+        <p class="subtitle">Analytical Powered-Descent Initiation for Variable-Mass Rocket Landing</p>
+        <p class="author"><strong>Udit Karthik</strong></p>
+        <p class="lead">A deterministic analytical framework for calculating a fuel-efficient translational landing burn without solving a full online trajectory optimization problem.</p>
+        <div class="actions">
+          <a class="button primary" href="#results">View Results</a>
+          <a class="button secondary" href="https://github.com/AeroUdit/ESPDI-Research" target="_blank" rel="noopener">GitHub Repository</a>
+          <a class="button secondary" href="./paper/ESPDI_Final_Research_Paper.pdf">Research Paper</a>
+        </div>
+      </div>
+      <div class="hero-card hero-image-card">
+        <img src="https://raw.githubusercontent.com/AeroUdit/ESPDI-Research/main/figures/ESPDI_Architecture.png" alt="ESPDI research architecture diagram" loading="eager">
+        <p class="image-caption">ESPDI-T is the primary contribution; ESPDI-A is the analytical extension.</p>
+      </div>
+    </div>
+  </section>
+
+  <section id="research" class="section">
+    <div class="container">
+      <div class="section-heading">
+        <p class="eyebrow">THE RESEARCH QUESTION</p>
+        <h2>Can an analytical ignition-point calculation reproduce the fuel-efficient translational solution of numerical optimal control?</h2>
+      </div>
+      <div class="two-col">
+        <div class="callout">
+          <h3>The problem</h3>
+          <p>A powered-landing rocket must convert position and velocity error into a near-zero terminal state while respecting finite thrust and propellant.</p>
+          <p>Numerical optimal control can solve this problem, but it requires iterative computation.</p>
+        </div>
+        <div class="callout neutral">
+          <h3>The ESPDI idea</h3>
+          <div class="flow">
+            <span>Initial state</span><i>→</i><span>Burn time</span><i>→</i><span>Thrust direction</span><i>→</i><span>Ignition point</span><i>→</i><span>Landing</span>
+          </div>
+          <p class="muted">ESPDI-T replaces trajectory search with a scalar nonlinear solve plus closed-form equations.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="math" class="section alt">
+    <div class="container">
+      <div class="section-heading">
+        <p class="eyebrow">MATHEMATICAL FRAMEWORK</p>
+        <h2>ESPDI-T</h2>
+        <p>The primary method solves the drag-free, constant-gravity, variable-mass point-mass problem analytically.</p>
+      </div>
+
+      <div class="math-grid">
+        <article class="math-card">
+          <span class="step">1</span>
+          <h3>Variable mass</h3>
+          <p>Maximum-thrust mass flow:</p>
+          <div class="equation">\[\dot m_p=\frac{T_{\max}}{I_{sp}g_0}\]</div>
+          <p>and</p>
+          <div class="equation">\[m(t)=m_0-\dot m_p t\]</div>
+        </article>
+
+        <article class="math-card">
+          <span class="step">2</span>
+          <h3>Burn time</h3>
+          <p>The terminal-velocity condition gives one scalar nonlinear equation:</p>
+          <div class="equation equation-large">\[I_{sp}g_0\ln\left(\frac{m_0}{m_0-\dot m_p t_b}\right)=\left\|-\mathbf v_0-\mathbf g t_b\right\|\]</div>
+        </article>
+
+        <article class="math-card">
+          <span class="step">3</span>
+          <h3>Thrust direction</h3>
+          <div class="equation equation-large">\[\hat{\mathbf u}_{ESPDI}=\frac{-\mathbf v_0-\mathbf g t_b}{\left\|-\mathbf v_0-\mathbf g t_b\right\|}\]</div>
+          <p>This gives the constant inertial thrust direction for the translational solution.</p>
+        </article>
+
+        <article class="math-card">
+          <span class="step">4</span>
+          <h3>Ignition point</h3>
+          <div class="equation">\[K=I_{sp}g_0\left[\left(t_b-\frac{m_0}{\dot m_p}\right)\ln\left(\frac{m_0}{m_f}\right)+t_b\right]\]</div>
+          <div class="formula-wide equation">\[\mathbf r_I=\mathbf r_L-\mathbf v_0t_b-K\hat{\mathbf u}_{ESPDI}-\frac12\mathbf g t_b^2\]</div>
+        </article>
+      </div>
+
+      <div class="callout terminal-note">
+        <span class="small-label">CORE IDEA</span>
+        <p>The full translational decision reduces to a scalar burn-time solve, a closed-form thrust direction, and a closed-form ignition-point calculation. No online vector-valued trajectory optimization is required.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container">
+      <div class="section-heading">
+        <p class="eyebrow">ANALYTICAL EXTENSION</p>
+        <h2>ESPDI-A</h2>
+        <p>ESPDI-A adds a terminal thrust-direction requirement while retaining a deterministic low-dimensional construction.</p>
+      </div>
+      <div class="two-col">
+        <div class="math-card">
+          <h3>Quadratic acceleration profile</h3>
+          <div class="equation equation-large">\[\mathbf a(\tau)=\mathbf c_0+\mathbf c_1\tau+\mathbf c_2\tau^2,\qquad \tau=\frac{t}{t_f}\]</div>
+          <p>The coefficients are fixed analytically by the terminal boundary conditions.</p>
+        </div>
+        <div class="math-card">
+          <h3>Terminal thrust direction</h3>
+          <div class="equation equation-large">\[\mathbf a_f=\mathbf g+\frac{T_f}{m_f}\hat{\mathbf b}_{3,f}\]</div>
+          <p>The resulting thrust profile is then checked against maximum thrust and dry-mass feasibility.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="results" class="section alt">
+    <div class="container">
+      <div class="section-heading">
+        <p class="eyebrow">FINAL EXPERIMENT</p>
+        <h2>500-case Monte Carlo Results</h2>
+        <p>The final performance study uses matched initial states within each comparison pair.</p>
+      </div>
+
+      <div class="result-grid">
+        <div class="result-card"><span>Pair-T success</span><strong>500 / 500</strong><small>100% for ESPDI-T and Optimizer-T</small></div>
+        <div class="result-card"><span>Mean T fuel gap</span><strong>≈ 0%</strong><small>Numerical roundoff scale</small></div>
+        <div class="result-card"><span>T runtime advantage</span><strong>23.9×</strong><small>Mean per-case runtime</small></div>
+        <div class="result-card"><span>ESPDI-A fuel gap</span><strong>3.894%</strong><small>499 converged paired cases</small></div>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-head"><h3>ESPDI-T vs Optimizer-T</h3><span>500 paired cases</span></div>
+        <img src="https://raw.githubusercontent.com/AeroUdit/ESPDI-Research/main/figures/ESPDI_T_Fuel_Gap.png" alt="ESPDI-T fuel gap across 500 Monte Carlo cases" loading="lazy">
+        <p class="caption">The translational fuel gap remains at numerical roundoff scale across the full 500-case study.</p>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-head"><h3>ESPDI-A vs Optimizer-A</h3><span>499 converged pairs</span></div>
+        <img src="https://raw.githubusercontent.com/AeroUdit/ESPDI-Research/main/figures/ESPDI_A_Fuel_Gap.png" alt="ESPDI-A fuel gap across paired cases" loading="lazy">
+        <p class="caption">The analytical terminal-direction extension uses more fuel than the fully optimized benchmark, quantifying the cost of the restricted analytical trajectory family.</p>
+      </div>
+
+      <div class="chart-card">
+        <div class="chart-head"><h3>Computation time</h3><span>Same test environment</span></div>
+        <img src="https://raw.githubusercontent.com/AeroUdit/ESPDI-Research/main/figures/Computation_Time_Comparison.png" alt="Mean computation time comparison" loading="lazy">
+      </div>
+    </div>
+  </section>
+
+  <section id="validation" class="section">
+    <div class="container">
+      <div class="section-heading">
+        <p class="eyebrow">INDEPENDENT VALIDATION</p>
+        <h2>Is the optimizer actually independent?</h2>
+        <p>This is a separate validation experiment. The optimizer is tested from non-ESPDI initial thrust histories and multiple mesh sizes.</p>
+      </div>
+      <div class="two-col">
+        <div class="callout">
+          <h3>Same-seed control</h3>
+          <p>The optimizer is initialized with the ESPDI-T solution and must reproduce the same feasible trajectory.</p>
+          <div class="equation">\[J_{optimizer}\approx J_{ESPDI}\]</div>
+        </div>
+        <div class="callout neutral">
+          <h3>Independent rediscovery</h3>
+          <p>Non-ESPDI thrust histories are used as initial guesses. The best feasible numerical solution is then compared with ESPDI-T.</p>
+          <div class="equation">\[\left|\frac{J_{independent}-J_{ESPDI}}{J_{ESPDI}}\right|\rightarrow 0\]</div>
+        </div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-head"><h3>Independent Optimizer-T validation</h3><span>20 Pair-T states</span></div>
+        <img src="https://raw.githubusercontent.com/AeroUdit/ESPDI-Research/main/figures/Optimizer_T_Validation.png" alt="Independent Optimizer-T validation" loading="lazy">
+        <p class="caption">The best independent optimizer solutions remain within sub-micropercent fuel difference of ESPDI-T in the submitted validation set.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="section alt">
+    <div class="container">
+      <div class="section-heading">
+        <p class="eyebrow">REPRODUCIBILITY</p>
+        <h2>Run the actual simulation</h2>
+        <p>The repository contains the Python simulation that generates the live 3D landing animation, method-specific trajectories, telemetry, and optimizer comparison.</p>
+      </div>
+      <div class="callout simulation-callout">
+        <div>
+          <span class="small-label">SOURCE CODE</span>
+          <h3>The animation is generated by the simulation itself.</h3>
+          <p>Run the code locally to see ESPDI-T, the optimizer benchmark, and ESPDI-A follow their respective calculated state histories in 3D.</p>
+        </div>
+        <div class="actions">
+          <a class="button primary" href="https://github.com/AeroUdit/ESPDI-Research/blob/main/simulation/espdi_simulation_repaired.py" target="_blank" rel="noopener">Open Simulation Code</a>
+          <a class="button secondary" href="https://github.com/AeroUdit/ESPDI-Research" target="_blank" rel="noopener">Open Repository</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="paper" class="section">
+    <div class="container">
+      <div class="paper-banner">
+        <div>
+          <p class="eyebrow">FULL MANUSCRIPT</p>
+          <h2>Research Paper</h2>
+          <p>The complete paper contains the derivations, benchmark formulation, validation methodology, Monte Carlo results, limitations, and future work.</p>
+        </div>
+        <a class="button primary" href="./paper/ESPDI_Final_Research_Paper.pdf">Read the Full Paper</a>
+      </div>
+    </div>
+  </section>
+
+  <section class="section alt compact">
+    <div class="container">
+      <div class="section-heading">
+        <p class="eyebrow">PROJECT FILES</p>
+        <h2>Reproducible research artifacts</h2>
+      </div>
+      <div class="resource-grid">
+        <a class="resource" href="https://github.com/AeroUdit/ESPDI-Research/tree/main/simulation" target="_blank" rel="noopener"><span>Code</span><strong>Simulation</strong></a>
+        <a class="resource" href="https://github.com/AeroUdit/ESPDI-Research/tree/main/validation" target="_blank" rel="noopener"><span>Benchmark</span><strong>Validation</strong></a>
+        <a class="resource" href="https://github.com/AeroUdit/ESPDI-Research/tree/main/results" target="_blank" rel="noopener"><span>Data</span><strong>Raw Results</strong></a>
+        <a class="resource" href="./paper/ESPDI_Final_Research_Paper.pdf"><span>Paper</span><strong>Final PDF</strong></a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="container footer-wrap">
+    <span>ESPDI · Udit Karthik · 2026</span>
+    <span><a href="https://github.com/AeroUdit/ESPDI-Research" target="_blank" rel="noopener">GitHub Repository</a></span>
+  </div>
+</footer>
+</body>
+</html>
