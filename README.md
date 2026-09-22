@@ -38,8 +38,7 @@ ESPDI-T solves the drag-free, constant-gravity, variable-mass point-mass landing
 
 ### 1. Variable-mass model
 For maximum thrust, the propellant mass-flow rate is:
-$$\dot{m}_p = \frac{T_{\max}}{I_{sp}g_0}$$
-
+m_dot = Tmax/(Isp g0)
 and the vehicle mass during the burn is:
 $$m(t) = m_0 - \dot{m}_p t$$
 
